@@ -4,16 +4,20 @@ var context = canvas.getContext('2d');
 
 let wheel1Angles = [];
 let wheel2Angles = [];
+let wheel3Angles = [];
+let wheel4Angles = [];
 for(i = (Math.PI / 4); i <= 2*Math.PI; i +=(Math.PI / 4)) {
     wheel1Angles.push(i);
     wheel2Angles.push(i);
+    wheel3Angles.push(i);
+    wheel4Angles.push(i);
 }
 
-var tParam = 0;
-var tParam2 = 0.05;
-
-var tParam3 = 0.5;
-var tParam4 = 0.55;
+let t = [];
+t.push(0);
+t.push(0.05);
+t.push(0.5);
+t.push(0.55);
 
 // gl matrix functions
 
@@ -31,8 +35,9 @@ function lineToTx(loc,Tx) {
 
 function setup() {
     function draw() {
-        tParam += 0.02;
-        tParam2 += 0.02;
+        for(i = 0; i < t.length; i++) {
+            t[i] += 0.02;
+        }
         canvas.width = canvas.width;
 
         function drawWheel(color, Tx, angles) {
@@ -110,7 +115,7 @@ function setup() {
         }
     
 
-        var C1 = function(t) { // discontinuity at t=1
+        var C1 = function(t) {
             var x = t;
             var y = 0.5 * Math.pow(t - 4, 2);
             return [x,y];
@@ -123,27 +128,27 @@ function setup() {
         }
     
 
-        var C1b = function(t) { // C0 continuity at t=1
+        var C2 = function(t) { 
             var x = t;
             var y = 0.8 * Math.pow(t - 4, 2);
             return [x,y];
         }
 
         
-        var C1bTangent = function(t) { // C0 continuity at t=1
+        var C2Tangent = function(t) {
             var x = 1;
             var y = (1.6*t) - 6.4;
             return [x,y];
         }
 
-        var C1e = function(t) { // C2 continuity at t=1
+        var C3 = function(t) { 
                 var x = t;
                 var y = -2*Math.pow(t - 4.1, 3) + 7*Math.pow(t - 4.1, 2) - 6*(t - 4.1) + 2;
                 return [x,y];
         }
     
     
-        var C1eTangent = function(t) {
+        var C3Tangent = function(t) {
             var xPrime = 1;
             var yPrime = -6*Math.pow(t - 4.1, 2) + 14*(t - 4.1) - 6;
             return [xPrime, yPrime];
@@ -160,11 +165,11 @@ function setup() {
                 return C1(t);
             }
             else if(t >= 4 && t < 5) {
-                return C1b(t);
+                return C2(t);
             }
             
             else if(t >= 5 && t < 7) {
-                return C1e(t);
+                return C3(t);
             }
             
         }
@@ -198,111 +203,133 @@ function setup() {
         drawCurve(0, 1.0, 100, C0,Tcurve,"brown");
         drawCurve(1.0, 3.0, 175, C02,Tcurve,"brown");
         drawCurve(3.0, 4, 100, C1,Tcurve,"brown");
-        drawCurve(4, 5, 100, C1b,Tcurve,"brown");
-        drawCurve(5, 6.9, 200, C1e,Tcurve,"brown");
+        drawCurve(4, 5, 100, C2,Tcurve,"brown");
+        drawCurve(5, 6.9, 200, C3,Tcurve,"brown");
         
         var TWheel = mat3.create();
-        mat3.fromTranslation(TWheel, Ccomp(tParam));
+        mat3.fromTranslation(TWheel, Ccomp(t[0]));
 
         var TWheel2 = mat3.create();
-        mat3.fromTranslation(TWheel2, Ccomp(tParam2));
+        mat3.fromTranslation(TWheel2, Ccomp(t[1]));
 
         var Tcart = mat3.create();
-        mat3.fromTranslation(Tcart, Ccomp(tParam2));
+        mat3.fromTranslation(Tcart, Ccomp(t[1]));
+
+        var TWheel3 = mat3.create();
+        mat3.fromTranslation(TWheel3, Ccomp(t[2]));
+
+        var TWheel4 = mat3.create();
+        mat3.fromTranslation(TWheel4, Ccomp(t[3]));
 
         var Tcart2 = mat3.create();
-        mat3.fromTranslation(Tcart2, Ccomp(tParam2));
+        mat3.fromTranslation(Tcart2, Ccomp(t[3]));
 
-        // angles for cart 1
+        // rotations for cart 1
         
-        if(tParam < 1) {
-            var tangent = C0Tangent(tParam);
+        if(t[1] < 1) {
+            var tangent = C0Tangent(t[1]);
             var angle = Math.atan2(tangent[1],tangent[0]);
             mat3.rotate(Tcart, Tcart, angle);
         }
-        else if(tParam >= 1 && tParam < 3) {
-            var tangent = C02Tangent(tParam);
+        else if(t[1] >= 1 && t[1] < 3) {
+            var tangent = C02Tangent(t[1]);
             var angle = Math.atan2(tangent[1],tangent[0]);
             mat3.rotate(Tcart, Tcart, angle);
         }
-        else if(tParam >= 3 && tParam < 4) {
-            var tangent = C1Tangent(tParam);
+        else if(t[1] >= 3 && t[1] < 4) {
+            var tangent = C1Tangent(t[1]);
             var angle = Math.atan2(tangent[1], tangent[0]);
             mat3.rotate(Tcart, Tcart, angle);
         }
-        else if(tParam >= 4 && tParam < 5) {
-            var tangent = C1bTangent(tParam);
+        else if(t[1] >= 4 && t[1] < 5) {
+            var tangent = C2Tangent(t[1]);
             var angle = Math.atan2(tangent[1], tangent[0]);
             mat3.rotate(Tcart, Tcart, angle);
         }
         else {
-            var tangent = C1eTangent(tParam);
+            var tangent = C3Tangent(t[1]);
             var angle = Math.atan2(tangent[1], tangent[0]);
             mat3.rotate(Tcart, Tcart, angle);
         }
 
-        if(tParam2 < 1) {
-            var tangent = C0Tangent(tParam2);
+        // rotations for cart 2
+
+        if(t[3] < 1) {
+            var tangent = C0Tangent(t[3]);
             var angle = Math.atan2(tangent[1], tangent[0]);
             mat3.rotate(Tcart2, Tcart2, angle);
         }
-        else if(tParam2 >= 1 && tParam2 < 3) {
-            var tangent = C02Tangent(tParam2);
+        else if(t[3] >= 1 && t[3] < 3) {
+            var tangent = C02Tangent(t[3]);
             var angle = Math.atan2(tangent[1],tangent[0]);
             mat3.rotate(Tcart2, Tcart2, angle);
         }
-        else if(tParam2 >= 3 && tParam2 < 4) {
-            var tangent = C1Tangent(tParam2);
+        else if(t[3] >= 3 && t[3] < 4) {
+            var tangent = C1Tangent(t[3]);
             var angle = Math.atan2(tangent[1], tangent[0]);
             mat3.rotate(Tcart2, Tcart2, angle);
         }
-        else if(tParam2 >= 4 && tParam2 < 5) {
-            var tangent = C1bTangent(tParam2);
+        else if(t[3] >= 4 && t[3] < 5) {
+            var tangent = C2Tangent(t[3]);
             var angle = Math.atan2(tangent[1], tangent[0]);
             mat3.rotate(Tcart2, Tcart2, angle);
         }
         else {
-            var tangent = C1eTangent(tParam2);
+            var tangent = C3Tangent(t[3]);
             var angle = Math.atan2(tangent[1], tangent[0]);
             mat3.rotate(Tcart2, Tcart2, angle);
         }
+
 
         // draw cart 1
 
-        var Tobject = mat3.create();
-        mat3.multiply(Tobject, Tcurve, TWheel);
-        
-        var trans1 = mat3.create();
-        mat3.fromTranslation(trans1, [0, -10]);
-        mat3.multiply(Tobject, trans1, Tobject);
-        drawWheel("#0ba115", Tobject, wheel1Angles);
-        
+        var Tobject1 = mat3.create();
+        mat3.multiply(Tobject1, Tcurve, Tcart);
+
+        var cartTrans = mat3.create();
+        mat3.fromTranslation(cartTrans, [0, -30]);
+        mat3.multiply(Tobject1, cartTrans, Tobject1);
+        drawCart("red", Tobject1);
+
         var Tobject2 = mat3.create();
-        mat3.multiply(Tobject2, Tcurve, TWheel2);
-
-        mat3.multiply(Tobject2, trans1, Tobject2);
-        drawWheel("#23e830", Tobject2, wheel2Angles);
-
+        mat3.multiply(Tobject2, Tcurve, TWheel);
+        
+        var wheelTrans = mat3.create();
+        mat3.fromTranslation(wheelTrans, [0, -10]);
+        mat3.multiply(Tobject2, wheelTrans, Tobject2);
+        drawWheel("#0ba115", Tobject2, wheel1Angles);
+        
         var Tobject3 = mat3.create();
-        mat3.multiply(Tobject3, Tcurve, Tcart)
+        mat3.multiply(Tobject3, Tcurve, TWheel2);
 
-        var trans3 = mat3.create();
-        mat3.fromTranslation(trans3, [0, -30]);
-        mat3.multiply(Tobject3, trans3, Tobject3);
-        drawCart("red", Tobject3);
+        mat3.multiply(Tobject3, wheelTrans, Tobject3);
+        drawWheel("#23e830", Tobject3, wheel2Angles);
 
         // draw cart 2
 
+        var Tobject4 = mat3.create();
+        mat3.multiply(Tobject4, Tcurve, Tcart2);
+        mat3.multiply(Tobject4, cartTrans, Tobject4);
+        drawCart("red", Tobject4);
 
+        var Tobject5 = mat3.create();
+        mat3.multiply(Tobject5, Tcurve, TWheel3);
+        mat3.multiply(Tobject5, wheelTrans, Tobject5);
+        drawWheel("#0ba115", Tobject5, wheel3Angles);
+        
+        var Tobject6 = mat3.create();
+        mat3.multiply(Tobject6, Tcurve, TWheel4);
+
+        mat3.multiply(Tobject6, wheelTrans, Tobject6);
+        drawWheel("#23e830", Tobject6, wheel4Angles);
 
         // reset the animation
-        if(tParam > 6.9) {
-            tParam = 0;
+        for(i = 0; i < t.length; i++) {
+            if(t[i] > 6.9) {
+                t[i] = 0;
+            }
         }
-
-        if(tParam2 > 6.9) {
-            tParam2 = 0;
-        }
+        
         window.requestAnimationFrame(draw);
     }
 
